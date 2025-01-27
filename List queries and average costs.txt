@@ -1,0 +1,10 @@
+let begin = datetime('20241202 08:32:00');
+let end = datetime('20241202 08:40:00');
+let Dplane = CDBDataPlaneRequests
+| where TimeGenerated between (begin .. end ) and OperationName == 'Query' and RegionName == 'North Europe'
+|project TimeGenerated,ActivityId,StatusCode,RequestCharge,RequestLength,UserAgent,DurationMs;
+let QRTS = CDBQueryRuntimeStatistics
+|join kind=inner Dplane on $left.ActivityId == $right.ActivityId
+|project TimeGenerated,PartitionKeyRangeId,QueryText,ActivityId,RequestCharge,RequestLength,UserAgent,DurationMs;
+QRTS
+|summarize avg(DurationMs),avg(RequestCharge),avg(RequestLength),count() by QueryText,UserAgent
